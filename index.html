@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>機甲啟動碼 v1.1 (完整優化版)</title>
+    <title>機甲啟動碼 v1.2 (全裝置優化版)</title>
     <style>
         :root {
             --primary: #00d2d3;
@@ -12,11 +12,11 @@
             --timer-color: #f1c40f;
         }
 
-        /* ★★★ CSS 防縮放優化 ★★★ */
+        /* ★★★ CSS 防縮放與觸控優化 ★★★ */
         * { 
             box-sizing: border-box; 
             user-select: none; -webkit-user-select: none; 
-            touch-action: manipulation; /* 關鍵：禁止縮放手勢 */
+            touch-action: manipulation;
         }
 
         body {
@@ -26,7 +26,6 @@
             overflow: hidden;
             display: flex; justify-content: center; align-items: center;
             min-height: 100vh; min-height: 100dvh;
-            /* 鎖定視窗 */
             position: fixed; width: 100%; height: 100%;
         }
 
@@ -37,11 +36,11 @@
         }
 
         .container {
-            width: 100%; max-width: 500px;
-            height: 100%; /* 填滿固定視窗 */
+            width: 100%; max-width: 480px;
+            height: 100%;
             display: flex; flex-direction: column;
             align-items: center; justify-content: space-between;
-            padding: 10px 20px max(20px, env(safe-area-inset-bottom));
+            padding: 10px 15px max(15px, env(safe-area-inset-bottom));
             position: relative;
         }
 
@@ -51,7 +50,7 @@
             color: white; font-size: 1.1rem; font-weight: bold;
             text-shadow: 0 0 10px var(--primary);
             z-index: 10; margin-top: 5px; flex-shrink: 0;
-            background: rgba(0,0,0,0.3); border-radius: 15px; padding: 5px 10px;
+            background: rgba(0,0,0,0.4); border-radius: 15px; padding: 5px 12px;
         }
         
         .icon-btn {
@@ -66,12 +65,12 @@
         /* 狀態區 */
         .status-area {
             width: 100%; display: flex; flex-direction: column; align-items: center;
-            position: absolute; top: 60px; left: 0; z-index: 20;
+            position: absolute; top: 55px; left: 0; z-index: 20;
             pointer-events: none;
         }
 
         .hero-hp-container {
-            width: 80%; max-width: 300px; height: 15px;
+            width: 75%; max-width: 280px; height: 14px;
             background: #dfe4ea; border: 2px solid #fff;
             border-radius: 15px; overflow: hidden;
             box-shadow: 0 5px 10px rgba(0,0,0,0.5);
@@ -84,9 +83,9 @@
         @keyframes flashRed { 0%, 100% { background-color: var(--hp-red); } 50% { background-color: #fff; } }
 
         .timer-container {
-            width: 80%; max-width: 300px; height: 6px;
+            width: 75%; max-width: 280px; height: 6px;
             background: rgba(255,255,255,0.2);
-            margin-top: 5px; border-radius: 3px;
+            margin-top: 4px; border-radius: 3px;
             overflow: hidden; opacity: 0; transition: opacity 0.3s;
         }
         .timer-bar {
@@ -101,7 +100,7 @@
             pointer-events: none;
         }
         #hero-img {
-            width: auto; max-height: 30vh; object-fit: contain;
+            width: auto; max-height: 25vh; object-fit: contain;
             filter: drop-shadow(0 0 15px rgba(0, 210, 211, 0.5));
             transition: transform 0.2s, filter 0.2s;
         }
@@ -112,7 +111,7 @@
         #boom-img {
             position: absolute; top: 50%; left: 50%;
             transform: translate(-50%, -50%) scale(0);
-            width: 250px; max-width: 90%; z-index: 30; opacity: 0;
+            width: 220px; max-width: 85%; z-index: 30; opacity: 0;
         }
         .boom-anim { animation: boomPop 1.2s forwards; }
         @keyframes boomPop {
@@ -127,29 +126,35 @@
             background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(10px);
             border-radius: 20px;
-            padding: 15px;
+            padding: 12px;
             border: 2px solid rgba(255,255,255,0.3);
-            margin-bottom: 0; display: grid; gap: 10px; flex-shrink: 0;
+            margin-bottom: 5px; display: grid; gap: 10px; flex-shrink: 0;
+            width: 100%; max-width: 380px;
         }
         .grid-lv1 { grid-template-columns: repeat(2, 1fr); } 
         .grid-lv2 { grid-template-columns: repeat(3, 1fr); } 
         .grid-lv3 { grid-template-columns: repeat(3, 1fr); } 
 
+        .control-panel.locked {
+            pointer-events: none; opacity: 0.9;
+        }
+
         /* 按鈕樣式 */
         .btn {
-            width: 80px; height: 80px; border-radius: 50%;
+            width: 100%; aspect-ratio: 1; max-width: 80px; max-height: 80px;
+            margin: 0 auto; border-radius: 50%;
             background-image: url('buttons.png'); background-size: 300% 300%;
             background-repeat: no-repeat; cursor: pointer;
             border: 3px solid rgba(255,255,255,0.5);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
             transition: transform 0.1s, filter 0.1s;
             -webkit-tap-highlight-color: transparent;
         }
         
-        @media (max-height: 700px) {
-            .btn { width: 65px; height: 65px; }
-            .control-panel { padding: 10px; gap: 8px; }
-            #hero-img { max-height: 25vh; }
+        @media (max-height: 650px) {
+            .btn { max-width: 60px; max-height: 60px; }
+            .control-panel { padding: 8px; gap: 6px; }
+            #hero-img { max-height: 20vh; }
         }
 
         .btn:active { transform: scale(0.9); }
@@ -165,11 +170,11 @@
         /* 全螢幕遮罩 */
         .overlay-screen {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9);
+            background: rgba(0,0,0,0.92);
             display: flex; flex-direction: column;
             justify-content: center; align-items: center;
             z-index: 100; color: white; text-align: center;
-            padding-bottom: env(safe-area-inset-bottom);
+            padding: 20px;
         }
         
         h1 { color: var(--primary); margin-bottom: 10px; font-size: 2.2rem; text-shadow: 0 0 20px var(--primary); }
@@ -183,7 +188,6 @@
         .menu-btn:active { transform: scale(0.95); background: var(--primary); color: black; }
         
         .level-tag { font-size: 0.9rem; opacity: 0.8; display: block; margin-top: 5px; color: #ffeb3b; }
-        
         .back-btn { margin-top: 20px; font-size: 1rem; border: 1px solid #aaa; color: #aaa; padding: 10px 20px; width: auto; }
 
         .hidden { display: none !important; }
@@ -198,11 +202,12 @@
         @keyframes popIn { 0% { transform: scale(0); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
 
         #msg-box {
-            position: absolute; top: 60%; left: 50%; transform: translate(-50%, -50%);
-            font-size: 2.5rem; font-weight: bold; color: white;
-            text-shadow: 0 0 20px black; pointer-events: none; opacity: 0;
-            transition: opacity 0.3s; z-index: 50; width: 100%; text-align: center;
-            background: rgba(0,0,0,0.6); padding: 10px 20px; border-radius: 10px;
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 2.2rem; font-weight: bold; color: white;
+            text-shadow: 0 0 15px black; pointer-events: none; opacity: 0;
+            transition: opacity 0.3s; z-index: 50; width: 90%; text-align: center;
+            background: rgba(0,0,0,0.7); padding: 12px 20px; border-radius: 12px;
+            border: 1px solid var(--primary);
         }
 
         .shake { animation: shake 0.5s; }
@@ -214,7 +219,7 @@
             border-radius: 10px;
             padding: 15px;
             margin: 15px 0;
-            width: 80%;
+            width: 85%; max-width: 320px;
             border: 1px solid var(--primary);
         }
         .new-record {
@@ -249,14 +254,15 @@
         </div>
 
         <div class="hero-zone">
-            <img id="boom-img" src="boom.png" alt="Boom">
-            <img id="hero-img" src="hero.png" alt="Hero">
+            <img id="boom-img" src="boom.png" alt="Boom" onerror="this.style.display='none';">
+            <img id="hero-img" src="hero.png" alt="Hero" onerror="this.style.display='none';">
             <div id="msg-box">準備!</div>
         </div>
 
         <div class="control-panel" id="grid-box"></div>
     </div>
 
+    <!-- 模式選擇 -->
     <div id="mode-screen" class="overlay-screen">
         <h1>機甲啟動碼</h1>
         <p style="color: #f1c40f; font-weight: bold; margin-top: -5px; animation: blink 2s infinite;">
@@ -273,6 +279,7 @@
         </button>
     </div>
 
+    <!-- 難度選擇 -->
     <div id="level-screen" class="overlay-screen hidden">
         <h1 id="mode-title">選擇難度</h1>
         <button class="menu-btn" onclick="startCountdown(1)">
@@ -287,34 +294,36 @@
         <button class="menu-btn back-btn" onclick="backToMode()">⬅ 回上頁</button>
     </div>
 
-    <div id="countdown-screen" class="overlay-screen hidden" style="background: rgba(0,0,0,0.6);">
+    <!-- 倒數畫面 -->
+    <div id="countdown-screen" class="overlay-screen hidden" style="background: rgba(0,0,0,0.75);">
         <div id="countdown-text">3</div>
     </div>
 
+    <!-- 暫停畫面 -->
     <div id="pause-screen" class="overlay-screen hidden">
         <h1>遊戲暫停</h1>
         <button class="menu-btn" onclick="togglePause()">▶ 繼續戰鬥</button>
         <button class="menu-btn back-btn" onclick="backToMode()">⏮ 放棄任務</button>
     </div>
 
+    <!-- 結算畫面 -->
     <div id="result-screen" class="overlay-screen hidden">
         <h1 style="color: #ff4757;">能量耗盡</h1>
-        <img src="lose.png" style="width: 150px; margin-bottom: 20px;">
+        <img src="lose.png" style="width: 140px; margin-bottom: 15px;" onerror="this.style.display='none';">
         
         <div class="score-record">
-            <p style="font-size: 1.5rem; margin: 10px 0;">本局分數: <span id="final-score" style="color:#00d2d3;">0</span></p>
-            <p style="font-size: 1.1rem; margin: 10px 0;">
+            <p style="font-size: 1.4rem; margin: 8px 0;">本局分數: <span id="final-score" style="color:#00d2d3;">0</span></p>
+            <p style="font-size: 1.1rem; margin: 8px 0;">
                 🏆 最高紀錄: <span id="high-score">0</span>
                 <span id="new-record-tag" class="new-record hidden"> (新紀錄!)</span>
             </p>
             <p id="record-detail" style="font-size: 0.9rem; color: #aaa; margin: 5px 0;"></p>
         </div>
 
-        <button class="menu-btn" onclick="location.reload()">重新維修</button>
+        <button class="menu-btn" onclick="backToMode()">重新維修</button>
     </div>
 
     <script>
-        // ★★★ 強力防縮放邏輯 (JS 層面) ★★★
         document.addEventListener('gesturestart', function(e) { e.preventDefault(); });
         document.addEventListener('dblclick', function(e) { e.preventDefault(); }, { passive: false });
         
@@ -331,14 +340,10 @@
             }
         };
 
-        gameConfig.stack[3].pool = [1,2,3,4,5,6,7,8,9];
-        gameConfig.random[3].pool = [1,2,3,4,5,6,7,8,9];
-
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         let audioCtx;
         let soundEnabled = true;
 
-        // ★★★ 核心修復：初始化與喚醒 AudioContext ★★★
         function initAudio() {
             if (!audioCtx) {
                 audioCtx = new AudioContext();
@@ -348,19 +353,18 @@
             }
         }
 
-        // 監聽全域點擊，強制喚醒音效引擎
         document.body.addEventListener('click', function() { initAudio(); }, { once: true });
         document.body.addEventListener('touchstart', function() { initAudio(); }, { once: true });
 
         function toggleAudio() {
-            initAudio(); // 確保切換時已初始化
+            initAudio();
             soundEnabled = !soundEnabled;
             document.getElementById('audio-btn').innerText = soundEnabled ? '🔊' : '🔇';
         }
 
         function playTone(freq, type = 'sine', duration = 0.3) {
             if (!soundEnabled || !isFinite(freq)) return;
-            if (!audioCtx) initAudio(); // 播放前再次檢查
+            if (!audioCtx) initAudio();
             if (audioCtx.state === 'suspended') audioCtx.resume();
 
             const osc = audioCtx.createOscillator();
@@ -411,11 +415,11 @@
         };
 
         function selectMode(mode) {
-            initAudio(); // 選擇模式時喚醒
+            initAudio();
             state.mode = mode;
             els.modeScreen.classList.add('hidden');
             els.levelScreen.classList.remove('hidden');
-            els.modeTitle.innerText = mode === 'stack' ? '堆疊記憶' : '隨機題庫';
+            els.modeTitle.innerText = mode === 'stack' ? '🧩 堆疊記憶' : '🎲 隨機題庫';
         }
 
         function backToMode() {
@@ -504,6 +508,7 @@
             stopActionTimer(); 
             els.timerBox.style.opacity = 0;
             state.inputLocked = true; 
+            els.grid.classList.add('locked');
 
             const setting = gameConfig[state.mode][state.diff];
 
@@ -523,6 +528,7 @@
         async function playSequence() {
             state.playerIndex = 0;
             state.isPlaying = true;
+            els.grid.classList.add('locked');
             
             showMessage("👁️ 看仔細！", 9999); 
             
@@ -532,11 +538,11 @@
             let gap = 200;    
 
             if (state.diff === 1) { 
-                onTime = 700; // 0.7秒
-                gap = 500;    // 0.5秒
+                onTime = 700; 
+                gap = 400;    
             } else if (state.diff === 2) { 
-                onTime = 600;
-                gap = 300;
+                onTime = 550;
+                gap = 250;
             }
             
             for (let i = 0; i < state.sequence.length; i++) {
@@ -555,6 +561,7 @@
             
             state.isPlaying = false;
             state.inputLocked = false; 
+            els.grid.classList.remove('locked');
             showMessage("👉 換你了！");
             startActionTimer(); 
         }
@@ -570,7 +577,7 @@
                 els.timerBar.style.width = '100%';
             }
             
-            let totalTime = (state.diff === 1) ? 10000 : 5000;
+            let totalTime = (state.diff === 1) ? 10000 : 6000;
             const interval = 100; 
             const step = 100 / (totalTime / interval);
 
@@ -613,6 +620,7 @@
                 if (state.playerIndex >= state.sequence.length) {
                     stopActionTimer(); 
                     state.inputLocked = true; 
+                    els.grid.classList.add('locked');
                     
                     state.score += (state.sequence.length * 10);
                     els.score.innerText = state.score;
@@ -638,6 +646,7 @@
         function handleMistake(isTimeout = false) {
             if (state.inputLocked) return; 
             state.inputLocked = true; 
+            els.grid.classList.add('locked');
 
             stopActionTimer();
             state.hp -= 25; 
@@ -649,7 +658,6 @@
             document.body.classList.add('shake');
             playTone(150, 'sawtooth', 0.4); 
 
-            // 觸發爆炸 (移除文字)
             els.boom.classList.remove('boom-anim');
             void els.boom.offsetWidth; 
             els.boom.classList.add('boom-anim');
@@ -666,7 +674,6 @@
             }, 500);
         }
 
-        // ★★★ 排行榜邏輯 ★★★
         function gameOver() {
             state.gameActive = false;
             stopActionTimer();
