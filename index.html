@@ -2,17 +2,17 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>機甲啟動碼 v1.2 (全裝置優化版)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>機甲啟動碼 v1.3 (全裝置防呆優化版) 🤖</title>
     <style>
         :root {
             --primary: #00d2d3;
             --hp-green: #2ed573;
             --hp-red: #ff4757;
             --timer-color: #f1c40f;
+            --bg-dark: #2f3640;
         }
 
-        /* ★★★ CSS 防縮放與觸控優化 ★★★ */
         * { 
             box-sizing: border-box; 
             user-select: none; -webkit-user-select: none; 
@@ -21,9 +21,8 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background-color: #2f3640;
-            margin: 0;
-            overflow: hidden;
+            background-color: var(--bg-dark);
+            margin: 0; overflow: hidden;
             display: flex; justify-content: center; align-items: center;
             min-height: 100vh; min-height: 100dvh;
             position: fixed; width: 100%; height: 100%;
@@ -32,12 +31,11 @@
         .battle-bg {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             z-index: -2; background-size: cover; background-position: center; opacity: 0.6;
-            pointer-events: none;
+            background-color: #1e272e; pointer-events: none;
         }
 
         .container {
-            width: 100%; max-width: 480px;
-            height: 100%;
+            width: 100%; max-width: 480px; height: 100vh; height: 100dvh;
             display: flex; flex-direction: column;
             align-items: center; justify-content: space-between;
             padding: 10px 15px max(15px, env(safe-area-inset-bottom));
@@ -47,20 +45,22 @@
         /* HUD */
         .hud {
             width: 100%; display: flex; justify-content: space-between; align-items: center;
-            color: white; font-size: 1.1rem; font-weight: bold;
+            color: white; font-size: 1rem; font-weight: bold;
             text-shadow: 0 0 10px var(--primary);
             z-index: 10; margin-top: 5px; flex-shrink: 0;
-            background: rgba(0,0,0,0.4); border-radius: 15px; padding: 5px 12px;
+            background: rgba(0,0,0,0.5); border-radius: 15px; padding: 6px 12px;
+            border: 1px solid rgba(0, 210, 211, 0.3);
         }
         
+        .hud-btn-group { display: flex; gap: 6px; }
         .icon-btn {
-            background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.5);
+            background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.4);
             color: white; border-radius: 8px; cursor: pointer;
-            padding: 5px 10px; font-size: 1.2rem; transition: background 0.2s;
+            padding: 4px 8px; font-size: 1rem; transition: background 0.2s;
         }
         .icon-btn:active { background: var(--primary); transform: scale(0.95); }
 
-        .game-info { display: flex; gap: 15px; }
+        .game-info { display: flex; gap: 12px; }
 
         /* 狀態區 */
         .status-area {
@@ -104,6 +104,9 @@
             filter: drop-shadow(0 0 15px rgba(0, 210, 211, 0.5));
             transition: transform 0.2s, filter 0.2s;
         }
+        .hero-emoji-fallback {
+            font-size: 5rem; filter: drop-shadow(0 0 15px rgba(0, 210, 211, 0.5));
+        }
         .hero-active { animation: heroPulse 0.5s; filter: drop-shadow(0 0 30px white) !important; }
         @keyframes heroPulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
 
@@ -112,6 +115,11 @@
             position: absolute; top: 50%; left: 50%;
             transform: translate(-50%, -50%) scale(0);
             width: 220px; max-width: 85%; z-index: 30; opacity: 0;
+        }
+        .boom-emoji-fallback {
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            font-size: 6rem; z-index: 30; opacity: 0; pointer-events: none;
         }
         .boom-anim { animation: boomPop 1.2s forwards; }
         @keyframes boomPop {
@@ -135,11 +143,9 @@
         .grid-lv2 { grid-template-columns: repeat(3, 1fr); } 
         .grid-lv3 { grid-template-columns: repeat(3, 1fr); } 
 
-        .control-panel.locked {
-            pointer-events: none; opacity: 0.9;
-        }
+        .control-panel.locked { pointer-events: none; opacity: 0.9; }
 
-        /* 按鈕樣式 */
+        /* 按鈕樣式 (含純 CSS 備案) */
         .btn {
             width: 100%; aspect-ratio: 1; max-width: 80px; max-height: 80px;
             margin: 0 auto; border-radius: 50%;
@@ -149,6 +155,8 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.5);
             transition: transform 0.1s, filter 0.1s;
             -webkit-tap-highlight-color: transparent;
+            display: flex; justify-content: center; align-items: center;
+            font-size: 1.5rem; color: #fff; font-weight: bold;
         }
         
         @media (max-height: 650px) {
@@ -163,9 +171,16 @@
             transform: scale(1.05); border-color: white;
         }
         
-        .b1 { background-position: 0% 0%; } .b2 { background-position: 50% 0%; } .b3 { background-position: 100% 0%; }
-        .b4 { background-position: 0% 50%; } .b5 { background-position: 50% 50%; } .b6 { background-position: 100% 50%; }
-        .b7 { background-position: 0% 100%; } .b8 { background-position: 50% 100%; } .b9 { background-position: 100% 100%; }
+        /* 備用 CSS 色彩（當 buttons.png 不存在時自動啟用） */
+        .b1 { background-position: 0% 0%; background-color: #ff4757; } 
+        .b2 { background-position: 50% 0%; background-color: #2ed573; } 
+        .b3 { background-position: 100% 0%; background-color: #1e90ff; }
+        .b4 { background-position: 0% 50%; background-color: #ffa502; } 
+        .b5 { background-position: 50% 50%; background-color: #9b59b6; } 
+        .b6 { background-position: 100% 50%; background-color: #e84393; }
+        .b7 { background-position: 0% 100%; background-color: #00d2d3; } 
+        .b8 { background-position: 50% 100%; background-color: #f1c40f; } 
+        .b9 { background-position: 100% 100%; background-color: #55efc4; }
 
         /* 全螢幕遮罩 */
         .overlay-screen {
@@ -213,18 +228,12 @@
         .shake { animation: shake 0.5s; }
         @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-10px); } 75% { transform: translateX(10px); } }
 
-        /* 排行榜樣式 */
         .score-record {
             background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            padding: 15px;
-            margin: 15px 0;
-            width: 85%; max-width: 320px;
-            border: 1px solid var(--primary);
+            border-radius: 10px; padding: 15px; margin: 15px 0;
+            width: 85%; max-width: 320px; border: 1px solid var(--primary);
         }
-        .new-record {
-            color: #f1c40f; font-weight: bold; animation: blink 1s infinite;
-        }
+        .new-record { color: #f1c40f; font-weight: bold; animation: blink 1s infinite; }
     </style>
 </head>
 <body>
@@ -238,9 +247,10 @@
                 <span>Lv <span id="level-display">1</span></span>
                 <span>Score <span id="score-display">0</span></span>
             </div>
-            <div style="display: flex; gap: 10px;">
-                <button class="icon-btn" id="audio-btn" onclick="toggleAudio()">🔊</button>
-                <button class="icon-btn" onclick="togglePause()">⏸</button>
+            <div class="hud-btn-group">
+                <button class="icon-btn" id="audio-btn" onclick="toggleAudio()" title="音效開關">🔊</button>
+                <button class="icon-btn" id="vibrate-btn" onclick="toggleVibrate()" title="震動開關">📳</button>
+                <button class="icon-btn" onclick="togglePause()" title="暫停遊戲">⏸</button>
             </div>
         </div>
 
@@ -254,8 +264,12 @@
         </div>
 
         <div class="hero-zone">
-            <img id="boom-img" src="boom.png" alt="Boom" onerror="this.style.display='none';">
-            <img id="hero-img" src="hero.png" alt="Hero" onerror="this.style.display='none';">
+            <img id="boom-img" src="boom.png" alt="Boom" onerror="this.style.display='none'; document.getElementById('boom-emoji').style.display='block';">
+            <div id="boom-emoji" class="boom-emoji-fallback">💥</div>
+
+            <img id="hero-img" src="hero.png" alt="Hero" onerror="this.style.display='none'; document.getElementById('hero-emoji').style.display='block';">
+            <div id="hero-emoji" class="hero-emoji-fallback" style="display:none;">🤖</div>
+
             <div id="msg-box">準備!</div>
         </div>
 
@@ -309,7 +323,7 @@
     <!-- 結算畫面 -->
     <div id="result-screen" class="overlay-screen hidden">
         <h1 style="color: #ff4757;">能量耗盡</h1>
-        <img src="lose.png" style="width: 140px; margin-bottom: 15px;" onerror="this.style.display='none';">
+        <div style="font-size:4.5rem; margin-bottom:10px;">👾</div>
         
         <div class="score-record">
             <p style="font-size: 1.4rem; margin: 8px 0;">本局分數: <span id="final-score" style="color:#00d2d3;">0</span></p>
@@ -343,13 +357,16 @@
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         let audioCtx;
         let soundEnabled = true;
+        let vibrateEnabled = true;
 
         function initAudio() {
-            if (!audioCtx) {
-                audioCtx = new AudioContext();
-            }
-            if (audioCtx.state === 'suspended') {
-                audioCtx.resume();
+            if (!audioCtx) audioCtx = new AudioContext();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+        }
+
+        function triggerVibrate(ms = 40) {
+            if (vibrateEnabled && navigator.vibrate) {
+                navigator.vibrate(ms);
             }
         }
 
@@ -360,6 +377,12 @@
             initAudio();
             soundEnabled = !soundEnabled;
             document.getElementById('audio-btn').innerText = soundEnabled ? '🔊' : '🔇';
+        }
+
+        function toggleVibrate() {
+            vibrateEnabled = !vibrateEnabled;
+            document.getElementById('vibrate-btn').innerText = vibrateEnabled ? '📳' : '📴';
+            if (vibrateEnabled) triggerVibrate(30);
         }
 
         function playTone(freq, type = 'sine', duration = 0.3) {
@@ -401,7 +424,9 @@
             modeTitle: document.getElementById('mode-title'),
             grid: document.getElementById('grid-box'),
             hero: document.getElementById('hero-img'),
+            heroEmoji: document.getElementById('hero-emoji'),
             boom: document.getElementById('boom-img'),
+            boomEmoji: document.getElementById('boom-emoji'),
             msg: document.getElementById('msg-box'),
             score: document.getElementById('score-display'),
             level: document.getElementById('level-display'),
@@ -466,6 +491,7 @@
             let count = 3;
             els.cntText.innerText = count;
             playTone(440, 'square', 0.1);
+            triggerVibrate(30);
 
             const timer = setInterval(() => {
                 count--;
@@ -475,10 +501,12 @@
                     els.cntText.offsetHeight; 
                     els.cntText.style.animation = 'popIn 0.5s';
                     playTone(440, 'square', 0.1);
+                    triggerVibrate(30);
                 } else {
                     clearInterval(timer);
                     els.cntText.innerText = "GO!";
                     playTone(880, 'square', 0.3);
+                    triggerVibrate(60);
                     setTimeout(() => {
                         els.cntScreen.classList.add('hidden');
                         state.gameActive = true;
@@ -552,6 +580,7 @@
                 
                 btn.classList.add('lit');
                 playTone(btn.dataset.tone, 'triangle', onTime / 1000);
+                triggerVibrate(20);
                 
                 await new Promise(r => setTimeout(r, onTime));
                 
@@ -611,6 +640,7 @@
 
             btn.classList.add('lit');
             playTone(btn.dataset.tone, 'triangle', 0.3);
+            triggerVibrate(30);
             setTimeout(() => btn.classList.remove('lit'), 150);
 
             if (index === state.sequence[state.playerIndex]) {
@@ -625,10 +655,18 @@
                     state.score += (state.sequence.length * 10);
                     els.score.innerText = state.score;
                     
-                    els.hero.classList.add('hero-active');
-                    setTimeout(() => els.hero.classList.remove('hero-active'), 500);
+                    // 動態護甲微修復 (獎勵)
+                    if (state.hp < 100) {
+                        state.hp = Math.min(100, state.hp + 10);
+                        updateHp();
+                    }
+
+                    const targetHero = els.hero.style.display !== 'none' ? els.hero : els.heroEmoji;
+                    targetHero.classList.add('hero-active');
+                    setTimeout(() => targetHero.classList.remove('hero-active'), 500);
                     
                     playTone(880, 'square', 0.15); 
+                    triggerVibrate(50);
                     
                     if (state.mode === 'stack') {
                         const setting = gameConfig.stack[state.diff];
@@ -657,10 +695,12 @@
             els.hpBar.classList.add('hp-damage');
             document.body.classList.add('shake');
             playTone(150, 'sawtooth', 0.4); 
+            triggerVibrate(120); // 按錯給予強烈警示震動
 
-            els.boom.classList.remove('boom-anim');
-            void els.boom.offsetWidth; 
-            els.boom.classList.add('boom-anim');
+            const targetBoom = els.boom.style.display !== 'none' ? els.boom : els.boomEmoji;
+            targetBoom.classList.remove('boom-anim');
+            void targetBoom.offsetWidth; 
+            targetBoom.classList.add('boom-anim');
             
             setTimeout(() => {
                 document.body.classList.remove('shake');
@@ -710,6 +750,7 @@
                 btn.className = `btn b${btnId}`;
                 btn.dataset.id = index; 
                 btn.dataset.tone = tones[index];
+                btn.innerText = index + 1; // 數字標籤增強記憶直覺
                 btn.addEventListener('pointerdown', (e) => handleInput(index, btn));
                 els.grid.appendChild(btn);
             });
