@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>機甲啟動碼 v1.3 (全裝置防呆優化版) 🤖</title>
+    <title>機甲啟動碼 v1.5 (背景雙層防呆修正版) 🤖</title>
     <style>
         :root {
             --primary: #00d2d3;
             --hp-green: #2ed573;
             --hp-red: #ff4757;
             --timer-color: #f1c40f;
-            --bg-dark: #2f3640;
+            --bg-dark: #1e272e;
         }
 
         * { 
@@ -28,10 +28,14 @@
             position: fixed; width: 100%; height: 100%;
         }
 
-        .battle-bg {
+        /* 雙層背景防呆：圖檔載入失敗自動退回科幻漸層 */
+        .battle-bg-container {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: -2; background-size: cover; background-position: center; opacity: 0.6;
-            background-color: #1e272e; pointer-events: none;
+            z-index: -2; background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            overflow: hidden; pointer-events: none;
+        }
+        .battle-bg-img {
+            width: 100%; height: 100%; object-fit: cover; opacity: 0.65;
         }
 
         .container {
@@ -48,8 +52,9 @@
             color: white; font-size: 1rem; font-weight: bold;
             text-shadow: 0 0 10px var(--primary);
             z-index: 10; margin-top: 5px; flex-shrink: 0;
-            background: rgba(0,0,0,0.5); border-radius: 15px; padding: 6px 12px;
-            border: 1px solid rgba(0, 210, 211, 0.3);
+            background: rgba(0,0,0,0.65); border-radius: 15px; padding: 6px 12px;
+            border: 1px solid rgba(0, 210, 211, 0.4);
+            backdrop-filter: blur(5px);
         }
         
         .hud-btn-group { display: flex; gap: 6px; }
@@ -145,7 +150,7 @@
 
         .control-panel.locked { pointer-events: none; opacity: 0.9; }
 
-        /* 按鈕樣式 (含純 CSS 備案) */
+        /* 按鈕樣式 */
         .btn {
             width: 100%; aspect-ratio: 1; max-width: 80px; max-height: 80px;
             margin: 0 auto; border-radius: 50%;
@@ -171,7 +176,6 @@
             transform: scale(1.05); border-color: white;
         }
         
-        /* 備用 CSS 色彩（當 buttons.png 不存在時自動啟用） */
         .b1 { background-position: 0% 0%; background-color: #ff4757; } 
         .b2 { background-position: 50% 0%; background-color: #2ed573; } 
         .b3 { background-position: 100% 0%; background-color: #1e90ff; }
@@ -238,7 +242,10 @@
 </head>
 <body>
 
-    <div class="battle-bg" style="background-image: url('bg.png');"></div>
+    <!-- 雙層背景容器 -->
+    <div class="battle-bg-container">
+        <img src="bg.png" class="battle-bg-img" onerror="this.style.display='none';">
+    </div>
 
     <div class="container">
         <div class="hud">
@@ -265,7 +272,7 @@
 
         <div class="hero-zone">
             <img id="boom-img" src="boom.png" alt="Boom" onerror="this.style.display='none'; document.getElementById('boom-emoji').style.display='block';">
-            <div id="boom-emoji" class="boom-emoji-fallback">💥</div>
+            <div id="boom-emoji" class="boom-emoji-fallback" style="display:none;">💥</div>
 
             <img id="hero-img" src="hero.png" alt="Hero" onerror="this.style.display='none'; document.getElementById('hero-emoji').style.display='block';">
             <div id="hero-emoji" class="hero-emoji-fallback" style="display:none;">🤖</div>
@@ -320,10 +327,13 @@
         <button class="menu-btn back-btn" onclick="backToMode()">⏮ 放棄任務</button>
     </div>
 
-    <!-- 結算畫面 -->
+    <!-- 結算畫面 (支援 lose.png 機甲癱倒損壞圖) -->
     <div id="result-screen" class="overlay-screen hidden">
         <h1 style="color: #ff4757;">能量耗盡</h1>
-        <div style="font-size:4.5rem; margin-bottom:10px;">👾</div>
+        <div style="height: 110px; display:flex; justify-content:center; align-items:center; margin-bottom:10px;">
+            <img src="lose.png" style="max-height:100%; object-fit:contain;" onerror="this.style.display='none'; document.getElementById('result-fallback-emoji').style.display='block';">
+            <span id="result-fallback-emoji" style="font-size:4.5rem; display:none;">💥</span>
+        </div>
         
         <div class="score-record">
             <p style="font-size: 1.4rem; margin: 8px 0;">本局分數: <span id="final-score" style="color:#00d2d3;">0</span></p>
@@ -655,7 +665,6 @@
                     state.score += (state.sequence.length * 10);
                     els.score.innerText = state.score;
                     
-                    // 動態護甲微修復 (獎勵)
                     if (state.hp < 100) {
                         state.hp = Math.min(100, state.hp + 10);
                         updateHp();
@@ -695,7 +704,7 @@
             els.hpBar.classList.add('hp-damage');
             document.body.classList.add('shake');
             playTone(150, 'sawtooth', 0.4); 
-            triggerVibrate(120); // 按錯給予強烈警示震動
+            triggerVibrate(120);
 
             const targetBoom = els.boom.style.display !== 'none' ? els.boom : els.boomEmoji;
             targetBoom.classList.remove('boom-anim');
@@ -750,7 +759,7 @@
                 btn.className = `btn b${btnId}`;
                 btn.dataset.id = index; 
                 btn.dataset.tone = tones[index];
-                btn.innerText = index + 1; // 數字標籤增強記憶直覺
+                btn.innerText = index + 1;
                 btn.addEventListener('pointerdown', (e) => handleInput(index, btn));
                 els.grid.appendChild(btn);
             });
